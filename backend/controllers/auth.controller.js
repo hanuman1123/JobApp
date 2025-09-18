@@ -1,4 +1,4 @@
-import User from "../models/auth.model";
+import User from "../models/auth.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -17,6 +17,7 @@ export const register = async (req, res) => {
       email,
       password: hashedPassword,
       userType,
+      profileImage: req.file ? req.file.path : null
     });
     return res
       .status(201)
