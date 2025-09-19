@@ -81,3 +81,29 @@ export const deletePost = async(req,res) => {
         return res.status(500).json({message: error.message});
     }
 }
+
+
+export const updatePost = async(req,res) => {
+    try {
+        const post = await Post.findById(req.params.postId);
+        if(!post){
+            return res.status(404).json({message:"Post not found"})
+        }
+        if(post.author.toString() !== req.user.id) {
+            return res.status(403).json({message:"not authorized"});
+        }
+
+        post.content = req.body.content || post.content;
+        post.postType = req.body.postType || post.postType;
+        if(req.files && req.files.length > 0) {
+            post.images = req.files.map((f) => f.path);
+
+        };
+
+        await post.save();
+        res.json(post);
+    } catch (error) {
+        return res.status(500).json({message: error.message})
+        
+    }
+}
