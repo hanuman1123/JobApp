@@ -24,7 +24,11 @@ const Home = () => {
   }, []);
 
   const handleNewPost = (newPost) => {
-    setPosts([newPost, ...posts]); // Add new post at top
+    setPosts([newPost, ...posts]);
+  };
+
+  const handleUpdatePost = (updatedPost) => {
+    setPosts(posts.map((p) => (p._id === updatedPost._id ? updatedPost : p)));
   };
 
   return (
@@ -35,7 +39,9 @@ const Home = () => {
         <main className="flex-1 p-6">
           <CreatePost onPostCreated={handleNewPost} />
           {posts.length > 0 ? (
-            posts.map((post) => <PostCard key={post._id} post={post} />)
+            posts.map((post) => (
+              <PostCard key={post._id} post={post} onUpdate={handleUpdatePost} />
+            ))
           ) : (
             <p className="text-center text-gray-500">No posts available</p>
           )}

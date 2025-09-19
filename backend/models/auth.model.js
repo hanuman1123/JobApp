@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
     default: "REGULAR_USER",
   },
 
-  ProfileImage: {
+  profileImage: {
     type: String,
   },
   skills: [
@@ -30,11 +30,15 @@ const userSchema = new mongoose.Schema({
       type: String,
     },
   ],
-  bio: [
+  bio: 
     {
       type: String,
     },
-  ],
+
+    location:{
+      type:String
+    },
+  
   businessInfo: {
     companyName:String,
     website:String,

@@ -62,9 +62,17 @@ export const logout = createAsyncThunk("auth/logout", async () => {
 const authSlice = createSlice({
   name: "auth",
   initialState,
-  reducers: {},
+  reducers: {
+    resetState: (state) => {
+      state.isLoading = false;
+      state.isError = false;
+      state.isSuccess = false;
+      state.message = "";
+    },
+  },
   extraReducers: (builder) => {
     builder
+      // REGISTER
       .addCase(register.pending, (state) => {
         state.isLoading = true;
       })
@@ -79,6 +87,8 @@ const authSlice = createSlice({
         state.isError = true;
         state.message = action.payload;
       })
+
+      // LOGIN
       .addCase(login.pending, (state) => {
         state.isLoading = true;
       })
@@ -93,14 +103,23 @@ const authSlice = createSlice({
         state.isError = true;
         state.message = action.payload;
       })
+
+      // GET ME
       .addCase(getMe.fulfilled, (state, action) => {
-        state.user = { ...state.user, ...action.payload };
+        if (state.user) {
+          state.user = { ...state.user, ...action.payload };
+          localStorage.setItem("user", JSON.stringify(state.user));
+        }
       })
+
+      // LOGOUT
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.token = null;
+        localStorage.removeItem("user");
       });
   },
 });
 
+export const { resetState } = authSlice.actions;
 export default authSlice.reducer;

@@ -1,21 +1,27 @@
 import  Post from './../models/post.model.js';
 
-export const createPost = async(req,res) => {
-    try {
-        const {content, postType} =  req.body;
+export const createPost = async (req, res) => {
+  try {
+    const { content, postType } = req.body;
 
-        const newPost = await Post.create({
-            author: req.user.id,
-            content,
-            postType,
-            image: req.files ? req.files.map(f => f.path) : [],
-        });
-
-        res.status(201).json(newPost);
-    } catch (error) {
-        return res.status(500).json({message: error.message});
+    if (!content && (!req.files || req.files.length === 0)) {
+      return res.status(400).json({ message: "Post must have text or image" });
     }
+
+    const newPost = await Post.create({
+      author: req.user.id,
+      content,
+      postType,
+      images: req.files ? req.files.map((f) => f.path) : [],
+    });
+
+    res.status(201).json(newPost);
+  } catch (error) {
+    console.error("Create Post Error:", error);
+    return res.status(500).json({ message: error.message });
+  }
 };
+
 
 
 export const getFeed = async(req,res) => {

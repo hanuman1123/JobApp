@@ -24,11 +24,9 @@ const login = async (userData) => {
 
 // Get current user profile
 const getMe = async (token) => {
-  const res = await axios.post(
-    "/auth/me",
-    {},
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+  const res = await axios.get("/auth/me", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return res.data;
 };
 

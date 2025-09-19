@@ -1,45 +1,132 @@
+import { useState } from "react";
+import axios from "../../utils/axiosInstance";
 
+const DEFAULT_PROFILE =
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQt7tMyfoIV_80oLxnHPRRamR8om6XZKkYHWWY02qdOdSZvUk4upL-ysi_bmuAY9vduBA&usqp=CAU";
 
-import React from 'react';
+const PostCard = ({ post, onUpdate }) => {
+  const [commentText, setCommentText] = useState("");
+  const [loading, setLoading] = useState(false);
 
-const PostCard = ({ post }) => {
-    return (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6 w-full max-w-xl mx-auto">
-            <div className="flex items-center mb-4">
-                <img
-                    src={post.author?.profileImage || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQt7tMyfoIV_80oLxnHPRRamR8om6XZKkYHWWY02qdOdSZvUk4upL-ysi_bmuAY9vduBA&usqp=CAU"}
-                    alt="author"
-                    className="w-10 h-10 rounded-full object-cover mr-3 border-2 border-blue-200"
-                />
-                <div>
-                    <h3 className="font-semibold text-gray-800">{post.author?.name}</h3>
-                    <p className="text-xs text-gray-500">{new Date(post.createdAt).toLocaleDateString()}</p>
-                </div>
-            </div>
-            <p className="mb-4 text-gray-700">{post.content}</p>
-            {post.images?.length > 0 && (
-                <img
-                    src={post.images[0]}
-                    alt="post"
-                    className="w-full max-h-80 object-cover rounded mb-4"
-                />
-            )}
-            <div className="flex space-x-8 text-gray-600 mt-2">
-                <span className="flex items-center space-x-1">
-                    <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14 9l-3 3m0 0l-3-3m3 3V4m0 16v-7" /></svg>
-                    <span>{post.likes?.length || 0}</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                    <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2v-8a2 2 0 012-2h2" /></svg>
-                    <span>{post.comments?.length || 0}</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                    <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 17l4 4 4-4m0-5V3" /></svg>
-                    <span>{post.shares || 0}</span>
-                </span>
-            </div>
+  // Handle Like
+  const handleLike = async () => {
+    try {
+      const res = await axios.post(`/posts/${post._id}/likes`);
+      if (onUpdate) onUpdate(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Handle Comment
+  const handleComment = async (e) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+
+    try {
+      setLoading(true);
+      const res = await axios.post(`/posts/${post._id}/comment`, {
+        text: commentText,
+      });
+      if (onUpdate) onUpdate(res.data);
+      setCommentText("");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white shadow-md rounded-lg p-4 mb-4">
+      {/* Post Header */}
+      <div className="flex items-center gap-3 mb-3">
+        <img
+          src={post.author?.profileImage || DEFAULT_PROFILE}
+          alt="author"
+          className="w-10 h-10 rounded-full object-cover border"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = DEFAULT_PROFILE;
+          }}
+        />
+        <div>
+          <h3 className="font-semibold">
+            {post.author?.name || post.author?.fullName || "Anonymous"}
+          </h3>
+          <p className="text-xs text-gray-500">
+            {new Date(post.createdAt).toLocaleDateString()}
+          </p>
         </div>
-    );
+      </div>
+
+      {/* Post Content */}
+      <p className="mb-3">{post.content}</p>
+
+      {post.images?.length > 0 && (
+        <img
+          src={post.images[0]}
+          alt="post"
+          className="rounded-md mb-3 w-full object-cover"
+        />
+      )}
+
+      {/* Actions */}
+      <div className="flex gap-6 text-gray-600 text-sm mb-3">
+        <button onClick={handleLike} className="hover:text-blue-600">
+          👍 Like ({post.likes?.length || 0})
+        </button>
+        <span>💬 {post.comments?.length || 0}</span>
+        <span>🔗 {post.shares || 0}</span>
+      </div>
+
+      {/* Comments Section */}
+      <div className="mt-3">
+        {/* Comment Input */}
+        <form onSubmit={handleComment} className="flex gap-2 mb-3">
+          <input
+            type="text"
+            placeholder="Write a comment..."
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            className="flex-1 border rounded p-2 text-sm"
+          />
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+            disabled={loading}
+          >
+            {loading ? "..." : "Post"}
+          </button>
+        </form>
+
+        {/* Display Comments */}
+        {post.comments?.length > 0 ? (
+          post.comments.map((c, i) => (
+            <div key={i} className="flex items-start gap-2 mb-2">
+              <img
+                src={c.user?.profileImage || DEFAULT_PROFILE}
+                alt="comment-user"
+                className="w-8 h-8 rounded-full object-cover border"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = DEFAULT_PROFILE;
+                }}
+              />
+              <div className="bg-gray-100 rounded px-3 py-1 text-sm">
+                <p className="font-semibold">
+                  {c.user?.name || c.user?.fullName || "User"}
+                </p>
+                <p>{c.text}</p>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500 text-sm">No comments yet.</p>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default PostCard;
